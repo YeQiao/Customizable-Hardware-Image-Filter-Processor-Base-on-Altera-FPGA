@@ -1,0 +1,70 @@
+VGA- our VGA code is a modified variation of the following found on https://blog.csdn.net/FPGADesigner/article/details/75193699
+
+      //水平扫描
+    always@(posedge clk_25M or negedge RSTn)    
+        if(!RSTn) x_cnt <= 'd0;
+        else if (x_cnt == H_SYNC_TOTAL) x_cnt <= 'd0;
+        else  x_cnt <= x_cnt + 1'b1;
+
+    //垂直扫描
+    always@(posedge clk_25M or negedge RSTn)    
+        if(!RSTn) y_cnt <= 'd0;
+        else if (y_cnt == V_SYNC_TOTAL) y_cnt <= 'd0;
+        else if (x_cnt == H_SYNC_TOTAL) y_cnt <= y_cnt + 1'b1;
+        else y_cnt <= y_cnt;
+
+    //H_SYNC信号
+    always@(posedge clk_25M or negedge RSTn)    
+        if(!RSTn) hsync <= 'd0;
+        else if (x_cnt == 'd0) hsync <= 1'b0;
+        else if (x_cnt == H_SYNC_END) hsync <= 1'b1;
+        else  hsync <= hsync;
+
+    //V_SYNC信号
+    always@(posedge clk_25M or negedge RSTn)    
+        if(!RSTn) vsync <= 'd0;
+        else if (y_cnt == 'd0) vsync <= 1'b0;
+        else if (y_cnt == V_SYNC_END) vsync <= 1'b1;
+        else  vsync <= vsync;   
+
+/////////////////////////////////////////////////////////////////////
+
+Matlab Script for converting from Bitmap to .mif completely borrowed from https://blog.csdn.net/qq_39210023/article/details/73385516
+
+clear;  
+clc;  
+n=31146;%174*179  
+mat = imread('tu1.bmp');%读取.bmp文件
+mat = double(mat);
+fid=fopen('bmp_data.mif','w');%打开待写入的.mif文件  
+fprintf(fid,'WIDTH=8;\n');%写入存储位宽8位  
+fprintf(fid,'DEPTH=31146;\n');%写入存储深度31146
+fprintf(fid,'ADDRESS_RADIX=UNS;\n');%写入地址类型为无符号整型  
+fprintf(fid,'DATA_RADIX=HEX;');%写入数据类型为无符号整型   
+fprintf(fid,'CONTENT BEGIN\n');%起始内容  
+for i=0:n-1  
+    x = mod(i,174)+1;  %174为bmp图片的水平分辨率
+    y = fix(i/174)+1;  
+    k = mat(y,x);
+fprintf(fid,'\t%d:%x;\n',i,k);  
+end  
+fprintf(fid,'END;\n');  
+fclose(fid);%关闭文件
+
+////////////////////////////////////////////////////////////////////
+
+VGA clock divider completely borrowed from http://referencedesigner.com/tutorials/verilogexamples/verilog_ex_02.php
+
+module frequency_divider_by2( clk ,rst,out_clk );
+output reg out_clk;
+input clk ;
+input rst;
+always @(posedge clk)
+begin
+if (~rst)
+     out_clk <= 1'b0;
+else
+     out_clk <= ~out_clk;	
+end
+endmodule
+
