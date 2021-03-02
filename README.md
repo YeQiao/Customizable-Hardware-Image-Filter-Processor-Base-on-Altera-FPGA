@@ -1,1 +1,1 @@
-
+Using Verilog with altera FPGA to Build an image filter not only support three different preset kernel - color inverting, blurring, and dimming, but users can manually input their kernel value (9x9) for their unique filtering result.
